@@ -1,0 +1,66 @@
+name: CI Pipeline - Model Training and Testing
+
+# This workflow runs automatically when code is pushed to the repository
+on:
+  push:
+    branches:
+      - dev  # Run on pushes to dev branch
+
+jobs:
+  check_working_repo:
+    runs-on: ubuntu-latest  # Use Ubuntu Linux server
+    
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for proper checkout
+      
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # Use Python 3.9
+      
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scikit-learn joblib
+          echo "Dependencies installed successfully!"
+      
+      # Step 4: Run train.py to generate the model
+      - name: Train the model
+        run: |
+          echo "Starting model training..."
+          python train.py
+          echo "Model training completed!"
+      
+      # Step 5: Verify the model file was created
+      - name: Verify model file exists
+        run: |
+          if [ -f "savedmodel.pth" ]; then
+            echo "✓ Model file (savedmodel.pth) generated successfully!"
+            ls -lh savedmodel.pth
+          else
+            echo "✗ Error: Model file not found!"
+            exit 1
+          fi
+      
+      # Step 6: Run test.py to display test accuracy
+      - name: Test the model
+        run: |
+          echo "Starting model testing..."
+          python test.py
+          echo "Model testing completed!"
+      
+      # Step 7: Display completion message
+      - name: CI Pipeline Summary
+        run: |
+          echo "=========================================="
+          echo "CI Pipeline completed successfully!"
+          echo "✓ Model trained"
+          echo "✓ Model saved"
+          echo "✓ Model tested"
+          echo "=========================================="
